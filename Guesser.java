@@ -1,4 +1,5 @@
 import java.io.Console;
+import java.util.Scanner;
 
 /**
  * Assignment 1 - Guessing Game
@@ -10,6 +11,7 @@ import java.io.Console;
 public class Guesser {
   private int low;
   private int high;
+  private Scanner scanner = new Scanner(System.in);
 
   /*
    * Task 1. Write code here for a constructor
@@ -44,7 +46,6 @@ public class Guesser {
         low + " and " + high);
     System.out.println("I'm going to ask a few questions in order " +
         "to guess the number.");
-    System.out.println("Please answer T for true, and F for false.\n");
   }
 
   /*
@@ -58,11 +59,22 @@ public class Guesser {
    * the player.
    */
   private String getReply() {
-    String reply = null;
     // Write code here which reads a String from the console.
     // As long as it is not a valid reply (one of "T" and "F")
     // write an error message, and read a new reply.
     // When you have gotten a valid reply, return it.
+
+    String reply = null;
+    try {
+      do {
+        System.out.println("Please enter T for true and F for false");
+        reply = scanner.nextLine().trim().toUpperCase();
+      } while (!reply.equals("F") && !reply.equals("T"));
+    } catch (Exception e) {
+      System.err.println("ERROR");
+      e.printStackTrace();
+    }
+
     return reply;
   }
 
@@ -74,7 +86,7 @@ public class Guesser {
       // current low and current high
       middle = low + (high - low) / 2;
 
-      System.out.println("Is the number less than or equal to " +
+      System.out.println("\nIs the number less than or equal to " +
           middle + "?");
       String reply = getReply();
       if ("T".equals(reply)) {
@@ -98,6 +110,7 @@ public class Guesser {
         guess +
         " (took me " + numberOfGuesses +
         " guesses)");
+    scanner.close();
   }
 
 }
