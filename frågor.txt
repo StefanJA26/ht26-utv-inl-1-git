@@ -1,0 +1,179 @@
+Siktar på VG
+
+---
+
+* Push och Pull skickar eller hämtar ändringar från ett remote repo.
+  Push skickar upp dina lokala commits till repot, pull drar ned 
+  nya commits som finns remote.
+
+
+* Git log visar historiken av commits, deras comments hash-id mm.
+  Git status visar statusen på ditt lokala workspace och staging area,
+  vilka filer som är nya, ändrade, borttagna, tracked eller untracked.
+
+
+* En Git branch är en separat utvecklingslinje som går parallellt med main.
+  Brancher är ett viktigt arbetssätt för att implementera och testa nya 
+  features utan att riskera att introducera buggar main branchen.
+
+
+* Kommandona som används för att rulla tillbaka till tidigare revisioner 
+  av repot eller dina filer är Git Restore, Git Reset och Git Revert.
+
+
+  - Git Restore används för att rulla tillbaka en fil till dess senaste 
+    commitade version. Använder man flaggan --staged så tas den bort ur 
+    staging arean och hamnar i ditt working directory igen. Vill man 
+    restore en fil från en specifik commit så använder man flaggan --source
+
+      + git restore <fil> (från senaste commitade revision)
+        git restore --staged <fil> (ta ur staging area och lägg i working directory)
+        git restore --source HEAD~<nummer> (hur många commits före HEAD)
+        git restore --source <commit-hash> (specificera exakt commit med dess hash)
+
+
+  - Git Reset används till att ta bort commits som gjorts och ändra commithistoriken.
+    Git Reset har tre viktiga flaggor, --soft --mixed (default) --hard som ändrar hur
+    kommandot beter sig.
+
+      + git reset --soft (ångrar commit och flyttar alla ändringar till
+        din staging area så du genast kan commita dem igen, används främst
+        för att fixa ett dåligt commit-message eller liknande men filer kan också
+        restoreas ifall man behöver ändra något)
+        
+          / git reset --soft HEAD~<nummer> (hur många commits före HEAD)
+            git reset --soft <hash> (specificera vilken commit man vill resetta till)
+
+      + git reset --mixed (defaultbeteendet av kommandot) ångrar commit
+        och flyttar ändringarna till ditt working directory. Vill man commita
+        på nytt behöver man lägga till dem i sin staging area igen.
+
+          / git reset HEAD~<nummer> (hur många commits före HEAD)
+            git reset <hash> (specificera vilken commit du vill resetta till)
+            
+            % man kan lägga till --mixed flaggan för tydlighet men det är inte
+              nödvändigt då mixed är defaultbeteendet för kommandot.
+      
+      + git reset --hard (den mest destruktiva versionen) ångrar commit och
+        tar bort alla ändringar, ingenting hamnar i working directory eller
+        staging area. Risk för förlust av arbete som inte pushats remote.
+
+          / git reset --hard HEAD~<nummer> (hur många commits före HEAD)
+            git reset --hard <hash> (specificera till vilken tidigare commit
+            du vill rulla tillbaka till)
+  
+
+  - Git Revert används till att "undo"a en tidigare commit genom att skapa
+    en ny commit som inverterar ändringarna från den tidigare.
+
+      + git revert <hash> (specificera vilken commit du vill reverta)
+
+
+******************************
+****** Exempel på Reset ******
+******************************
+
+- git switch -c reset-branch
+  Skapar och byter till reset-branch
+    
+    Switched to a new branch 'reset-branch'
+
+- git reset a6510c3 (reset till commit a6510c3)
+  (eftersom jag inte använder någon flagga blir det en reset --mixed dvs
+   alla ändringar från commiten finns i mitt working directory)
+
+    Changes not staged for commit:
+      (use "git add <file>..." to update what will be committed)
+      (use "git restore <file>..." to discard changes in working directory)
+      modified:   Guesser.java
+      modified:   GuessingGame.java
+  
+- git add . (lägg till alla filer i staging area)
+
+- git status
+
+    Changes to be committed:
+      (use "git restore --staged <file>..." to unstage)
+      modified:   Guesser.java
+      modified:   GuessingGame.java
+
+- git commit -m "reset to a6510c3"
+
+    [reset-branch 6bafa3f] reset to a6510c3
+      2 files changed, 40 insertions(+), 26 deletions(-)
+
+- git push --set-upstream origin reset-branch
+
+    Enumerating objects: 7, done.
+    Counting objects: 100% (7/7), done.
+    Delta compression using up to 10 threads
+    Compressing objects: 100% (4/4), done.
+    Writing objects: 100% (4/4), 881 bytes | 881.00 KiB/s, done.
+    Total 4 (delta 2), reused 0 (delta 0), pack-reused 0 (from 0)
+    remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+    remote:
+    remote: Create a pull request for 'reset-branch' on GitHub by visiting:
+    remote:      https://github.com/StefanJA26/ht26-utv-inl-1-git/pull/new/reset-branch
+    remote:
+    To https://github.com/StefanJA26/ht26-utv-inl-1-git.git
+    * [new branch]      reset-branch -> reset-branch
+    branch 'reset-branch' set up to track 'origin/reset-branch'.
+  
+*** Slut exempel på Reset ***
+
+
+*******************************
+****** Exempel på Revert ******
+*******************************
+
+Här vill jag ångra att jag lagt till .gitignore
+
+- git switch -c revert-branch
+
+- git log --oneline
+
+    7916688 (HEAD -> revert-branch, origin/main, main) added run_game.sh script
+    89e51f8 changed high number to 10
+    aef8335 added user reply logic to Guesser.getReply()
+    ff4a128 added method calls to Guesser.start() and called start() in main
+    a6510c3 added GuessingGame.java
+    fec8fb1 added constructor to Guesser.java
+    45372a2 added Guesser.java
+    e8a3c98 added .gitignore
+
+- git revert e8a3c98
+
+    [revert-branch 14e3c08] Revert "added .gitignore"
+    1 file changed, 12 deletions(-)
+    delete mode 100644 .gitignore
+
+- git log --oneline
+
+    14e3c08 (HEAD -> revert-branch) Revert "added .gitignore"
+    7916688 (origin/main, main) added run_game.sh script
+    89e51f8 changed high number to 10
+    aef8335 added user reply logic to Guesser.getReply()
+    ff4a128 added method calls to Guesser.start() and called start() in main
+    a6510c3 added GuessingGame.java
+    fec8fb1 added constructor to Guesser.java
+    45372a2 added Guesser.java
+    e8a3c98 added .gitignore
+
+- git push --set-upstream origin revert-branch
+
+    Enumerating objects: 3, done.
+    Counting objects: 100% (3/3), done.
+    Delta compression using up to 10 threads
+    Compressing objects: 100% (2/2), done.
+    Writing objects: 100% (2/2), 277 bytes | 277.00 KiB/s, done.
+    Total 2 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+    remote: Resolving deltas: 100% (1/1), completed with 1 local object.
+    remote:
+    remote: Create a pull request for 'revert-branch' on GitHub by visiting:
+    remote:      https://github.com/StefanJA26/ht26-utv-inl-1-git/pull/new/revert-branch
+    remote:
+    To https://github.com/StefanJA26/ht26-utv-inl-1-git.git
+    * [new branch]      revert-branch -> revert-branch
+    branch 'revert-branch' set up to track 'origin/revert-branch'.
+
+*** Exempel på Revert ***
